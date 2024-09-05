@@ -4,110 +4,107 @@
 #include <time.h>
 #include "../include/enemy.h"
 #include "../include/ship.h"
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 100
 
 extern volatile int gameRunning;
-Enemy enemies[MAX_ENEMIES];
 
-int enemyQueue[MAX_ENEMIES];
-int front = -1;
-int rear = -1;
+Enemy* enemyListHead = NULL;
 
 int life = 3;
 int score = 0;
 
-int isQueueEmpty() {
-    return front == -1;
-}
-
-
-// Function to add an element to the queue
-void enqueue(int index) {
-    if (rear == -1) {
-        front = rear = 0;
-    } else {
-        rear = (rear + 1) % MAX_ENEMIES;
-    }
-    enemyQueue[rear] = index;
-}
-
-// Function to remove and return the front element from the queue
-int dequeue() {
-    if (isQueueEmpty()) {
-        return -1; // Queue is empty
-    }
-    int index = enemyQueue[front];
-    if (front == rear) {
-        front = rear = -1; // Queue becomes empty
-    } else {
-        front = (front + 1) % MAX_ENEMIES;
-    }
-    return index;
-}
-
 void drawEnemies() {
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (enemies[i].isActive) {
-            mvprintw(enemies[i].y, enemies[i].x, "W");
+    Enemy* current = enemyListHead;
+    while (current != NULL) {
+        if (current->isActive) {
+            mvprintw(current->y, current->x, "W");
         }
+        current = current->next;
     }
 }
 
 void checkCollisions() {
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (!enemies[i].isActive) continue;
-
-        for (int j = 0; j < shotsCount; j++) {
-            if (shots[j].isActive && shots[j].x == enemies[i].x && shots[j].y == enemies[i].y) {
-                enemies[i].isActive = 0; 
-                shots[j].isActive = 0; // Deactivate the shot
-                cleanupShots();
-                cleanupEnemy(i);
-                score += 10;
-                // Optionally, add code to handle score or effects
+    Enemy* current = enemyListHead;
+    Enemy* prev = NULL;
+    while (current != NULL) {
+        if (current->isActive) {
+            Shot* shot = shots;
+            while (shot != NULL) {
+                if (shot->x == current->x && shot->y == current->y) {
+                    score += 10;
+                    removeEnemy(current);
+                    mvaddch(shot->y, shot->x, ' ');
+                    break;
+                }
+                shot = shot->next;
+            }
+            if (current->isActive && current->x == shipPosition.x && current->y+1 == shipPosition.y) {
+                life = 0; // Decrement life if enemy collides with the ship
+                removeEnemy(current);
+                if (life <= 0) {
+                    gameRunning = 0; // End the game if life is zero
+                }
             }
         }
-        if (enemies[i].isActive && enemies[i].x == shipPosition.x && enemies[i].y == shipPosition.y) {
-            life--; // Decrement life if enemy collides with the ship
-            cleanupEnemy(i);
-            if (life <= 0) {
-                gameRunning = 0; // End the game if life is zero
-            }
-        }
+        current = current->next;
     }
 }
 
 void moveEnemiesDown() {
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (enemies[i].isActive) {
-            enemies[i].y += 1; // Move enemy down by increasing y coordinate
-            if (enemies[i].y >= LINES - 2) {
-                life--; // Decrement life if enemy reaches the bottom
-                cleanupEnemy(i);
+    Enemy* current = enemyListHead;
+    while (current != NULL) {
+        if (current->isActive) {
+            current->y += 1;
+            if (current->y >= LINES ) {
+                life--;
+                mvaddch(current->y - 1, current->x, ' ');
+                removeEnemy(current);
             }
             if (life <= 0) {
-                gameRunning = 0; // End the game if life is zero
-            }   
-            mvaddch(enemies[i].y - 1, enemies[i].x, ' ');
+                gameRunning = 0;
+            }
+            mvaddch(current->y - 1, current->x, ' ');
         }
+        current = current->next;
     }
 }
 
-void cleanupEnemy(int i) {
-    enemies[i].isActive = 0;
-    mvaddch(enemies[i].y, enemies[i].x, ' ');
+// Función para agregar un enemigo a la lista
+void addEnemy(int x, int y) {
+    Enemy* newEnemy = (Enemy*)malloc(sizeof(Enemy));
+    if (newEnemy == NULL) {
+        // Manejo de error de memoria
+        return;
+    }
+    newEnemy->x = x;
+    newEnemy->y = y;
+    newEnemy->isActive = 1;
+    newEnemy->next = enemyListHead;
+    enemyListHead = newEnemy;
 }
 
 int activateRandomEnemy() {
     srand(time(NULL)); // Ideally, call this once at the start of your program
-    for (int i = 0; i < MAX_ENEMIES; i++) {
-        if (!enemies[i].isActive) {
-            enemies[i].x = rand() % (COLS - 2) + 1;
-            enemies[i].y = 1;
-            enemies[i].isActive = 1;
-            enqueue(i); // Add the index of the activated enemy to the queue
-            return 1;
-        }
+    int x = rand() % COLS;
+    int y = 1;
+    addEnemy(x, y);
+    return 1;
+}
+
+// Función para eliminar un enemigo de la lista
+void removeEnemy(Enemy* enemy) {
+    Enemy* temp = enemyListHead;
+    mvaddch(enemy->y, enemy->x, ' '); // Clear the enemy from the screen
+    Enemy* prev = NULL;
+    while (temp != NULL && temp != enemy) {
+        prev = temp;
+        temp = temp->next;
     }
-    return 0;
+    if (temp == NULL) return; // No se encontró el enemigo
+    if (prev == NULL) {
+        enemyListHead = temp->next;
+    } else {
+        prev->next = temp->next;
+    }
+    free(temp);
 }

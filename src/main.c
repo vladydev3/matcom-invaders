@@ -7,20 +7,30 @@
 #include "../include/ship.h"
 #include "../include/enemy.h"
 #include "../include/scheduling.h"
+#include "../include/game.h"
 
 #define FPS 60
 #define FRAME_DELAY (1000000 / FPS) // Microsegundos por frame
 
 // Variable global para controlar la ejecución del hilo de disparos
 volatile int keepRunningShots = 1;
+volatile int keepMovingShip = 1;
 volatile int gameRunning = 1;
 volatile int enemyMoveTimer = 0;
 int iterationCount = 0;
 
-// Función para el hilo que maneja los disparos
+
+void* moveShipThread(void* arg) {
+    while (keepMovingShip) {
+        moveShip();
+        usleep(50000); // Espera un breve periodo antes de mover la nave de nuevo
+    }
+    return NULL;
+}
+
 void* moveShotsThread(void* arg) {
-    while (keepRunningShots) {
-        moveShots(); // Llama a tu función existente que mueve los disparos
+    while (keepRunningShots) {        
+        moveShots(); 
         usleep(50000); // Espera un breve periodo antes de mover los disparos de nuevo
     }
     return NULL;
@@ -42,15 +52,16 @@ int showMenu() {
 
     while(1) {
         clear();
+        refresh();
         mvprintw(0, 0, "Welcome to the Game");
         mvprintw(2, 0, "1. Start Game");
         mvprintw(3, 0, "2. Exit");
 
         // Highlight the current selection
         if (highlight == 0) {
-            mvprintw(2, 0, "> Start Game");
+            mvprintw(2, 0, ">  Start Game");
         } else {
-            mvprintw(3, 0, "> Exit");
+            mvprintw(3, 0, ">  Exit");
         }
 
         int key = getch();
@@ -70,31 +81,17 @@ int showMenu() {
     }
 }
 
-int main() {
-    // Inicializar ncurses
-    initscr(); // Inicia el modo ncurses
-    cbreak(); // Deshabilita el buffer de línea, permitiendo que los caracteres sean leídos de inmediato
-    noecho(); // No mostrar los caracteres leídos en la pantalla
-    keypad(stdscr, TRUE); // Habilita la lectura de teclas de función, flechas, etc.
-    curs_set(0); // Oculta el cursor
-    // Dibuja un borde alrededor de la ventana estándar
-    box(stdscr, 0, 0);
-
-    int choice = showMenu(); // Display the menu and get the user's choice
-    if (choice == 2) {
-        endwin(); // End ncurses mode
-        return 0; // Exit the program
-    }
-
+void game() {
     clear();
 
     // Inicializa la posición de la nave
     shipPosition.x = COLS / 2;
     shipPosition.y = LINES - 2; // La nave aparece en la parte inferior de la pantalla
 
+
     // Crea un hilo para manejar el movimiento de la nave
     pthread_t shipThread;
-    pthread_create(&shipThread, NULL, moveShip, NULL);
+    pthread_create(&shipThread, NULL, moveShipThread, NULL);
 
     // Crea un hilo para manejar el movimiento de los disparos
     pthread_t shotsThread;
@@ -142,15 +139,36 @@ int main() {
     mvprintw(LINES / 2, COLS / 2 - 5, "GAME OVER");
     mvprintw(LINES / 2 + 1, COLS / 2 - 5, "Score: %d", score);
 
-    // Finaliza el modo ncurses
-    endwin();
-
     // Detiene los hilos
     keepRunningShots = 0;
+    keepMovingShip = 0;
+
+    pthread_mutex_destroy(&mutexMoveShip);
+    pthread_mutex_destroy(&mutexMoveShots);
 
     // Espera a que el hilo termine
     pthread_join(shipThread, NULL);
     pthread_join(shotsThread, NULL);
 
+    // Finaliza el modo ncurses
+    endwin();
+}
+
+int main() {
+    // Inicializar ncurses
+    initscr(); // Inicia el modo ncurses
+    cbreak(); // Deshabilita el buffer de línea, permitiendo que los caracteres sean leídos de inmediato
+    noecho(); // No mostrar los caracteres leídos en la pantalla
+    keypad(stdscr, TRUE); // Habilita la lectura de teclas de función, flechas, etc.
+    curs_set(0); // Oculta el cursor
+
+    int choice = showMenu(); // Display the menu and get the user's choice
+    if (choice == 2) {
+        endwin(); // End ncurses mode
+        return 0; // Exit the program
+    }
+
+    game();
+    
     return 0;
 }

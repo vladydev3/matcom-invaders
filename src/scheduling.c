@@ -12,11 +12,8 @@ void activateEnemies(int count) {
 void scheduleEnemyAppearances() {
     static int lastScore = 0; // Keep track of the last score to determine changes
 
-    // Example condition based on score (assuming you have a way to track score)
-    if (score - lastScore > 50) { // If the player has gained 100 points since the last check
-        activateEnemies(3); // Activate 3 enemies
+    if (score - lastScore > 20) { // If the player has gained 100 points since the last check
+        activateEnemies(1); // Activate 1 enemy
         lastScore = score; // Update the last score
     }
-
-    // You can add more conditions here based on time, levels, etc.
 }

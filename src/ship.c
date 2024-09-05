@@ -1,11 +1,13 @@
 #include "../include/ship.h"
+#include "../include/game.h"
 #include <ncurses.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+
 Position shipPosition;
 
-void* moveShip(void* arg) {
+void* moveShip() {
     int ch;
     int prevX = shipPosition.x;
     int prevY = shipPosition.y;
@@ -13,26 +15,39 @@ void* moveShip(void* arg) {
     // Make getch non-blocking
     nodelay(stdscr, TRUE);
 
-    while ((ch = getch()) != 'q') {
+    while ((ch = getch()) != 'q' ) {
         if (ch != ERR) { // Check if a key was pressed
+            pthread_mutex_lock(&mutexMoveShip);
             prevX = shipPosition.x;
             prevY = shipPosition.y;
 
             switch (ch) {
                 case KEY_LEFT:
-                    if (shipPosition.x > 1) shipPosition.x--;
+                    if (shipPosition.x > 0) shipPosition.x--;
                     break;
                 case KEY_RIGHT:
-                    if (shipPosition.x < COLS - 2) shipPosition.x++;
+                    if (shipPosition.x < COLS - 1) shipPosition.x++;
                     break;
                 case ' ':
+                    pthread_mutex_lock(&mutexMoveShots);
                     addShot(shipPosition.x, shipPosition.y - 1);
+                    pthread_mutex_unlock(&mutexMoveShots);
                     break;
-                // Additional cases for up/down if desired
+                case 'a':
+                    // int choice = showMenu();
+                    // if (choice == 2) {
+                    //     endwin(); // End ncurses mode
+                    //     break;
+                    // }
+                    // game();
+                    break;
             }
 
-            mvaddch(prevY, prevX, ' ');
+            mvaddch(prevY, prevX, ' '); // Clear previous position
             mvprintw(shipPosition.y, shipPosition.x, "A");
+
+            pthread_mutex_unlock(&mutexMoveShip);
+
             refresh();
         }
         // Add a small delay to prevent CPU overuse
@@ -47,40 +62,56 @@ int shotsCount = 0;
 
 // Función para agregar un disparo
 void addShot(int x, int y) {
-    shots = realloc(shots, (shotsCount + 1) * sizeof(Shot));
-    shots[shotsCount].x = x;
-    shots[shotsCount].y = y;
-    shots[shotsCount].isActive = 1;
+    Shot *newShot = (Shot *)malloc(sizeof(Shot));
+    if (newShot == NULL) {
+        // error de memoria
+        return;
+    }
+    newShot->x = x;
+    newShot->y = y;
+    newShot->isActive = 1;
+    newShot->next = shots; // El nuevo disparo apunta al que era el primero
+    shots = newShot; // Ahora el nuevo disparo es el primero de la lista
     shotsCount++;
 }
 
 // Función para mover los disparos
 void moveShots() {
-    for (int i = 0; i < shotsCount; i++) {
-        if (shots[i].isActive) {
-            // Borra el disparo en la posición actual
-            mvaddch(shots[i].y, shots[i].x, ' ');
-            shots[i].y--; // Mueve el disparo hacia arriba
-
-            // Verifica si el disparo salió de la pantalla
-            if (shots[i].y <= 0) {
-                shots[i].isActive = 0;
+    pthread_mutex_lock(&mutexMoveShots);
+    Shot *current = shots;
+    while (current != NULL) {
+        if (current->isActive) {
+            mvaddch(current->y, current->x, ' '); // Borra el disparo
+            current->y--; // Mueve el disparo hacia arriba
+            if (current->y <= 0) {
+                current->isActive = 0; // Desactiva el disparo si sale de la pantalla
             } else {
-                // Dibuja el disparo en la nueva posición
-                mvaddch(shots[i].y, shots[i].x, '|');
+                mvaddch(current->y, current->x, '|'); // Dibuja el disparo en la nueva posición
             }
         }
+        current = current->next;
     }
+    pthread_mutex_unlock(&mutexMoveShots);
 }
 
 // Función para limpiar los disparos inactivos
 void cleanupShots() {
-    int activeShots = 0;
-    for (int i = 0; i < shotsCount; i++) {
-        if (shots[i].isActive) {
-            shots[activeShots++] = shots[i];
+    Shot *current = shots;
+    Shot *prev = NULL;
+    while (current != NULL) {
+        if (!current->isActive) {
+            if (prev != NULL) {
+                prev->next = current->next;
+            } else {
+                shots = current->next;
+            }
+            Shot *toDelete = current;
+            current = current->next;
+            free(toDelete);
+            shotsCount--;
+        } else {
+            prev = current;
+            current = current->next;
         }
     }
-    shotsCount = activeShots;
-    shots = realloc(shots, shotsCount * sizeof(Shot));
 }

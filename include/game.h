@@ -1,8 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
+#include <pthread.h>    
 
-pthread_mutex_t mutexMoveShip = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutexMoveShots = PTHREAD_MUTEX_INITIALIZER;
+extern pthread_mutex_t mutexMoveShip;
+extern pthread_mutex_t mutexMoveShots;
 
 int showMenu();
 void game();

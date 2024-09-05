@@ -33,6 +33,8 @@ void checkCollisions() {
                 if (shot->x == current->x && shot->y == current->y) {
                     score += 10;
                     removeEnemy(current);
+                    shot->isActive = 0;
+                    cleanupShots();
                     mvaddch(shot->y, shot->x, ' ');
                     break;
                 }

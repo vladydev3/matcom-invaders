@@ -18,6 +18,8 @@ volatile int keepMovingShip = 1;
 volatile int gameRunning = 1;
 volatile int enemyMoveTimer = 0;
 int iterationCount = 0;
+pthread_mutex_t mutexMoveShip = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexMoveShots = PTHREAD_MUTEX_INITIALIZER;
 
 
 void* moveShipThread(void* arg) {
@@ -38,12 +40,12 @@ void* moveShotsThread(void* arg) {
 
 void displayLives() {
     mvprintw(0, 0, "Lives: %d", life); // Display lives at the top left corner
-    refresh(); // Refresh the screen to update the display
+    // refresh(); // Refresh the screen to update the display
 }
 
 void displayScore() {
     mvprintw(0, COLS - 10, "Score: %d", score); // Display score at the top right corner
-    refresh(); // Refresh the screen to update the display
+    // refresh(); // Refresh the screen to update the display
 }
 
 int showMenu() {
@@ -88,6 +90,8 @@ void game() {
     shipPosition.x = COLS / 2;
     shipPosition.y = LINES - 2; // La nave aparece en la parte inferior de la pantalla
 
+    pthread_mutex_init(&mutexMoveShip, NULL);
+    pthread_mutex_init(&mutexMoveShots, NULL);
 
     // Crea un hilo para manejar el movimiento de la nave
     pthread_t shipThread;

@@ -39,12 +39,12 @@ void* moveShotsThread(void* arg) {
 
 void displayLives() {
     mvprintw(0, 0, "Lives: %d", life); // Display lives at the top left corner
-    refresh(); // Refresh the screen to update the display
+    
 }
 
 void displayScore() {
     mvprintw(0, COLS - 10, "Score: %d", score); // Display score at the top right corner
-    refresh(); // Refresh the screen to update the display
+    
 }
 
 int showMenu() {

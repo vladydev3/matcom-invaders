@@ -9,6 +9,7 @@
 extern volatile int gameRunning;
 
 Enemy* enemyListHead = NULL;
+EnemyActivationRequest* activationRequestHead = NULL;
 
 int life = 3;
 int score = 0;
@@ -85,12 +86,20 @@ void addEnemy(int x, int y) {
     enemyListHead = newEnemy;
 }
 
-int activateRandomEnemy() {
-    srand(time(NULL)); // Ideally, call this once at the start of your program
+void activateRandomEnemy() {
+    srand(time(NULL)); 
     int x = rand() % COLS;
     int y = 1;
-    addEnemy(x, y);
-    return 1;
+
+    EnemyActivationRequest* newRequest = (EnemyActivationRequest*)malloc(sizeof(EnemyActivationRequest));
+    if (newRequest == NULL) {
+        // Manejo de error de memoria
+        return;
+    }
+    newRequest->x = x;
+    newRequest->y = y;
+    newRequest->next = activationRequestHead;
+    activationRequestHead = newRequest;    
 }
 
 // Función para eliminar un enemigo de la lista

@@ -17,7 +17,6 @@ volatile int keepRunningShots = 1;
 volatile int keepMovingShip = 1;
 volatile int gameRunning = 1;
 volatile int enemyMoveTimer = 0;
-int iterationCount = 0;
 pthread_mutex_t mutexMoveShip = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexMoveShots = PTHREAD_MUTEX_INITIALIZER;
 
@@ -40,12 +39,12 @@ void* moveShotsThread(void* arg) {
 
 void displayLives() {
     mvprintw(0, 0, "Lives: %d", life); // Display lives at the top left corner
-    // refresh(); // Refresh the screen to update the display
+    refresh(); // Refresh the screen to update the display
 }
 
 void displayScore() {
     mvprintw(0, COLS - 10, "Score: %d", score); // Display score at the top right corner
-    // refresh(); // Refresh the screen to update the display
+    refresh(); // Refresh the screen to update the display
 }
 
 int showMenu() {
@@ -103,8 +102,7 @@ void game() {
 
     // Bucle principal del juego
     while (gameRunning) {
-
-        scheduleEnemyAppearances();
+        schedule_enemies_fcfs(); 
 
         displayLives(); // Muestra las vidas restantes
 
@@ -114,22 +112,12 @@ void game() {
 
         checkCollisions(); // Verifica si un disparo ha impactado a un enemigo
 
-
         // Incrementa el temporizador y mueve los enemigos si es el momento
         enemyMoveTimer++;
         if (enemyMoveTimer >= 20) { // Ajusta este valor para controlar la velocidad
             moveEnemiesDown(); // Mueve los enemigos hacia abajo
             enemyMoveTimer = 0; // Reinicia el temporizador
         }
-
-        // Incrementa el contador de iteraciones
-        iterationCount++;
-
-        if (iterationCount % 100 == 0) {
-            activateRandomEnemy();
-        }
-
-        refresh(); // Actualiza la pantalla
 
         usleep(FRAME_DELAY); // Espera un breve periodo para mantener el framerate
     }
@@ -142,10 +130,12 @@ void game() {
     // Mostrar GAME OVER y puntuacion
     mvprintw(LINES / 2, COLS / 2 - 5, "GAME OVER");
     mvprintw(LINES / 2 + 1, COLS / 2 - 5, "Score: %d", score);
+    mvprintw(LINES / 2 + 2, COLS / 2, " ");
+    mvprintw(LINES / 2 + 3, COLS / 2 - 10, "Press q to exit...");
 
     // Detiene los hilos
-    keepRunningShots = 0;
     keepMovingShip = 0;
+    keepRunningShots = 0;
 
     pthread_mutex_destroy(&mutexMoveShip);
     pthread_mutex_destroy(&mutexMoveShots);

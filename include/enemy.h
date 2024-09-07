@@ -10,14 +10,21 @@ typedef struct Enemy {
 
 extern Enemy* enemyListHead; // Puntero a la cabeza de la lista de enemigos
 
+typedef struct EnemyActivationRequest {
+    int x, y;
+    struct EnemyActivationRequest* next;
+} EnemyActivationRequest;
+
+extern EnemyActivationRequest* activationRequestHead;
+
 extern int life;
 extern int score;
 
 void drawEnemies();
 void checkCollisions();
 void moveEnemiesDown();
-int activateRandomEnemy();
 void removeEnemy(Enemy* enemy);
+void activateRandomEnemy();
 void addEnemy(int x, int y);
 
 #endif // ENEMY_H

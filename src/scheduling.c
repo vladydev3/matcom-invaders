@@ -1,19 +1,24 @@
+#include "threads.h"
+#include <stdlib.h>
+#include <time.h>
+#include <limits.h>
+#include <pthread.h>
 #include "../include/enemy.h"
+#include "../include/scheduling.h"
 
-// Function to activate a specific number of enemies
-void activateEnemies(int count) {
-    int activatedCount = 0;
-    while(activatedCount < count && activateRandomEnemy()) {
-        activatedCount++;
+void schedule_enemies_fcfs() {
+    // frame count y el score del jugador (variable global) para controlar la velocidad de los enemigos
+    static int frameCount = 0;
+    frameCount++;
+    // dependiendo del score, los enemigos se activarán cada vez más rápido
+    if (frameCount % (60 - score / 100) == 0) {
+        activateRandomEnemy();
     }
-}
 
-// Scheduler function to plan enemy appearances
-void scheduleEnemyAppearances() {
-    static int lastScore = 0; // Keep track of the last score to determine changes
-
-    if (score - lastScore > 20) { // If the player has gained 100 points since the last check
-        activateEnemies(1); // Activate 1 enemy
-        lastScore = score; // Update the last score
+    while (activationRequestHead != NULL) {
+        EnemyActivationRequest* request = activationRequestHead;
+        addEnemy(request->x, request->y); // Usamos la función existente para agregar el enemigo
+        activationRequestHead = request->next;
+        free(request);
     }
 }

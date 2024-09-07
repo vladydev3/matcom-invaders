@@ -17,41 +17,40 @@ void* moveShip() {
 
     while ((ch = getch()) != 'q' ) {
         if (ch != ERR) { // Check if a key was pressed
-            pthread_mutex_lock(&mutexMoveShip);
+            // pthread_mutex_lock(&mutexMoveShip);
             prevX = shipPosition.x;
             prevY = shipPosition.y;
 
             switch (ch) {
                 case KEY_LEFT:
+                case 'a':
                     if (shipPosition.x > 0) shipPosition.x--;
                     break;
                 case KEY_RIGHT:
+                case 'd':
                     if (shipPosition.x < COLS - 1) shipPosition.x++;
                     break;
                 case ' ':
-                    pthread_mutex_lock(&mutexMoveShots);
+                    // pthread_mutex_lock(&mutexMoveShots);
                     addShot(shipPosition.x, shipPosition.y - 1);
-                    pthread_mutex_unlock(&mutexMoveShots);
+                    // pthread_mutex_unlock(&mutexMoveShots);
                     break;
-                case 'a':
-                    // int choice = showMenu();
-                    // if (choice == 2) {
-                    //     endwin(); // End ncurses mode
-                    //     break;
-                    // }
-                    // game();
+                case 'q':
+                    gameRunning = 0;
+                    endwin(); // End ncurses mode
+                    exit(0);
                     break;
             }
 
             mvaddch(prevY, prevX, ' '); // Clear previous position
             mvprintw(shipPosition.y, shipPosition.x, "A");
 
-            pthread_mutex_unlock(&mutexMoveShip);
+            // pthread_mutex_unlock(&mutexMoveShip);
 
             refresh();
         }
         // Add a small delay to prevent CPU overuse
-        usleep(10000); // Adjust delay as needed for game responsiveness
+        usleep(10000); 
     }
     return NULL;
 }
@@ -77,7 +76,7 @@ void addShot(int x, int y) {
 
 // Función para mover los disparos
 void moveShots() {
-    pthread_mutex_lock(&mutexMoveShots);
+    // pthread_mutex_lock(&mutexMoveShots);
     Shot *current = shots;
     while (current != NULL) {
         if (current->isActive) {
@@ -91,7 +90,7 @@ void moveShots() {
         }
         current = current->next;
     }
-    pthread_mutex_unlock(&mutexMoveShots);
+    // pthread_mutex_unlock(&mutexMoveShots);
 }
 
 // Función para limpiar los disparos inactivos

@@ -5,7 +5,7 @@ typedef struct {
     int x, y;
 } Position;
 
-typedef struct {
+typedef struct Shot {
     int x, y;
     int isActive;
     struct Shot *next;

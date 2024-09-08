@@ -36,7 +36,7 @@ void* moveShip() {
                     // pthread_mutex_unlock(&mutexMoveShots);
                     break;
                 case 'q':
-                    gameRunning = 0;
+                    // gameRunning = 0;
                     endwin(); // End ncurses mode
                     exit(0);
                     break;

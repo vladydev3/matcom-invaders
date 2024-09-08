@@ -4,6 +4,7 @@
 #include <time.h>
 #include "../include/enemy.h"
 #include "../include/ship.h"
+#include "../include/position.h"
 #define MAX_ENEMIES 100
 
 extern volatile int gameRunning;
@@ -86,10 +87,9 @@ void addEnemy(int x, int y) {
     enemyListHead = newEnemy;
 }
 
-void activateRandomEnemy() {
-    srand(time(NULL)); 
-    int x = rand() % COLS;
-    int y = 1;
+void activateEnemy(PositionEnemy* pos) {
+    int x = pos->x;
+    int y = pos->y;
 
     EnemyActivationRequest* newRequest = (EnemyActivationRequest*)malloc(sizeof(EnemyActivationRequest));
     if (newRequest == NULL) {

@@ -8,6 +8,7 @@
 #include "../include/enemy.h"
 #include "../include/scheduling.h"
 #include "../include/game.h"
+#include "../include/position.h"
 
 #define FPS 60
 #define FRAME_DELAY (1000000 / FPS) // Microsegundos por frame
@@ -19,6 +20,9 @@ volatile int gameRunning = 1;
 volatile int enemyMoveTimer = 0;
 pthread_mutex_t mutexMoveShip = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexMoveShots = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexScreen = PTHREAD_MUTEX_INITIALIZER; // Mutex para proteger el acceso a la pantalla
+extern PositionEnemy* lruTail;
+
 
 
 void* moveShipThread(void* arg) {
@@ -38,14 +42,15 @@ void* moveShotsThread(void* arg) {
 }
 
 void displayLives() {
-    mvprintw(0, 0, "Lives: %d", life); // Display lives at the top left corner
-    
+     mvprintw(0, 0, "Lives: %d", life); // Display lives at the top left corner
+ 
 }
 
 void displayScore() {
     mvprintw(0, COLS - 10, "Score: %d", score); // Display score at the top right corner
-    
+
 }
+
 
 int showMenu() {
     int choice = 0;
@@ -99,17 +104,17 @@ void game() {
     // Crea un hilo para manejar el movimiento de los disparos
     pthread_t shotsThread;
     pthread_create(&shotsThread, NULL, moveShotsThread, NULL);
-
+    initializeLandingPositions(7);
     // Bucle principal del juego
     while (gameRunning) {
-        schedule_enemies_fcfs(); 
+        schedule_enemies_fcfs(lruTail); 
 
         displayLives(); // Muestra las vidas restantes
 
         displayScore(); // Muestra la puntuación
-        
-        drawEnemies(); // Dibuja los enemigos
 
+        drawEnemies(); // Dibuja los enemigos
+        
         checkCollisions(); // Verifica si un disparo ha impactado a un enemigo
 
         // Incrementa el temporizador y mueve los enemigos si es el momento

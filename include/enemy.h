@@ -1,6 +1,7 @@
 #ifndef ENEMY_H
 #define ENEMY_H
 #include <stddef.h>
+#include "position.h"
 
 typedef struct Enemy {
     int x, y;
@@ -24,7 +25,7 @@ void drawEnemies();
 void checkCollisions();
 void moveEnemiesDown();
 void removeEnemy(Enemy* enemy);
-void activateRandomEnemy();
+void activateEnemy(PositionEnemy* pos);
 void addEnemy(int x, int y);
 
 #endif // ENEMY_H

@@ -154,6 +154,7 @@ void game() {
 }
 
 int main() {
+    srand(time(NULL));
     // Inicializar ncurses
     initscr(); // Inicia el modo ncurses
     cbreak(); // Deshabilita el buffer de línea, permitiendo que los caracteres sean leídos de inmediato

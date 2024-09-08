@@ -13,7 +13,7 @@ void initializeLandingPositions(int numPositions) {
     for (int i = 0; i < numPositions; i++) {
         PositionEnemy* newPos = (PositionEnemy*)malloc(sizeof(PositionEnemy));
         
-        newPos->x = rand() % 100;  // Coordenadas aleatorias dentro del ancho de la pantalla (ejemplo: 0 a 800)
+        newPos->x = rand() % COLS;  // Coordenadas aleatorias dentro del ancho de la pantalla (ejemplo: 0 a 800)
         newPos->y = 0;             // Y fijo en 0, que es la parte superior de la pantalla
         
         newPos->next = NULL;

@@ -7,5 +7,6 @@ extern pthread_mutex_t mutexMoveShots;
 
 int showMenu();
 void game();
+void gameOver();
 
 #endif

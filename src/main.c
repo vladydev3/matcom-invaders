@@ -87,6 +87,19 @@ int showMenu() {
     }
 }
 
+void gameOver() {
+    // limpia la pantalla
+    clear();
+    gameRunning=0;
+
+    // Mostrar GAME OVER y puntuacion
+    mvprintw(LINES / 2, COLS / 2 - 5, "GAME OVER");
+    mvprintw(LINES / 2 + 1, COLS / 2 - 5, "Score: %d", score);
+    mvprintw(LINES / 2 + 2, COLS / 2, " ");
+    mvprintw(LINES / 2 + 3, COLS / 2 - 10, "Press ESC to exit...");
+
+}
+
 void game() {
     clear();
 
@@ -129,14 +142,7 @@ void game() {
 
     displayLives(); // Muestra las vidas restantes
 
-    // limpia la pantalla
-    clear();
-
-    // Mostrar GAME OVER y puntuacion
-    mvprintw(LINES / 2, COLS / 2 - 5, "GAME OVER");
-    mvprintw(LINES / 2 + 1, COLS / 2 - 5, "Score: %d", score);
-    mvprintw(LINES / 2 + 2, COLS / 2, " ");
-    mvprintw(LINES / 2 + 3, COLS / 2 - 10, "Press q to exit...");
+    gameOver();
 
     // Detiene los hilos
     keepMovingShip = 0;

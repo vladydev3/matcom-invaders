@@ -7,6 +7,8 @@
 #include "../include/position.h"
 #define MAX_ENEMIES 100
 
+
+
 extern volatile int gameRunning;
 
 Enemy* enemyListHead = NULL;
@@ -17,9 +19,12 @@ int score = 0;
 
 void drawEnemies() {
     Enemy* current = enemyListHead;
+
     while (current != NULL) {
         if (current->isActive) {
+            attron(COLOR_PAIR(1));
             mvprintw(current->y, current->x, "W");
+            attroff(COLOR_PAIR(1));
         }
         current = current->next;
     }

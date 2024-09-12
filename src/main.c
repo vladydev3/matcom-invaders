@@ -9,6 +9,9 @@
 #include "../include/scheduling.h"
 #include "../include/game.h"
 #include "../include/position.h"
+#include "../include/score.h"
+
+
 
 #define FPS 60
 #define FRAME_DELAY (1000000 / FPS) // Microsegundos por frame
@@ -92,10 +95,17 @@ void gameOver() {
     clear();
     gameRunning=0;
 
+    int high_score = read_score();
+
+    if (score > high_score) {
+        write_score(score);
+        high_score = score;
+    }
+
     // Mostrar GAME OVER y puntuacion
     mvprintw(LINES / 2, COLS / 2 - 5, "GAME OVER");
     mvprintw(LINES / 2 + 1, COLS / 2 - 5, "Score: %d", score);
-    mvprintw(LINES / 2 + 2, COLS / 2, " ");
+    mvprintw(LINES / 2 + 2, COLS / 2 - 7, "High Score: %d", high_score);
     mvprintw(LINES / 2 + 3, COLS / 2 - 10, "Press ESC to exit...");
 
 }
@@ -159,7 +169,7 @@ void game() {
     endwin();
 }
 
-int main() {
+int main() {        
     srand(time(NULL));
     // Inicializar ncurses
     initscr(); // Inicia el modo ncurses
@@ -167,6 +177,12 @@ int main() {
     noecho(); // No mostrar los caracteres leídos en la pantalla
     keypad(stdscr, TRUE); // Habilita la lectura de teclas de función, flechas, etc.
     curs_set(0); // Oculta el cursor
+
+    start_color();
+
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(3, COLOR_MAGENTA, COLOR_BLACK);
 
     int choice = showMenu(); // Display the menu and get the user's choice
     if (choice == 2) {

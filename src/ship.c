@@ -42,7 +42,9 @@ void* moveShip() {
 
         }
         mvaddch(prevY, prevX, ' '); // Clear previous position
+        attron(COLOR_PAIR(3));
         mvprintw(shipPosition.y, shipPosition.x, "A");
+        attroff(COLOR_PAIR(3));
 
         pthread_mutex_unlock(&mutexMoveShip);
         refresh();
@@ -83,7 +85,9 @@ void moveShots() {
             if (current->y <= 0) {
                 current->isActive = 0; // Desactiva el disparo si sale de la pantalla
             } else {
+                attron(COLOR_PAIR(2));
                 mvaddch(current->y, current->x, '|'); // Dibuja el disparo en la nueva posición
+                attroff(COLOR_PAIR(2));
             }
         }
         current = current->next;
